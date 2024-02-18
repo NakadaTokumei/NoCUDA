@@ -4,7 +4,36 @@
 #include <dlfcn.h>
 #include <sys/stat.h>
 
+#include <iostream>
+
 #include <asm-generic/ioctl.h>
+
+#include <test/compiler_builtin.h>
+#include <test/nv_def.h>
+
+struct nv_parameter_os00
+{
+    NVHandle    rootHandle;
+    NVHandle    parentObjHandle;
+    NVHandle    oldObjHandle;
+    NVi32       status;
+};
+
+struct nv_parameter_os21
+{
+    NVHandle    rootHandle;
+    NVHandle    parentObjHandle;
+    NVHandle    newObjHandle;
+    NVi32       classHandle;
+    NVpointer   pAllocParams    ALIGNED(8);
+    NVu32       paramSize;
+    NVi32       status;
+};
+
+struct nv_parameter_os64
+{
+    /* TODO */
+};
 
 #define sniff_print(S, ...) printf("[Cuda Sniff] " S, __VA_ARGS__)
 
@@ -75,7 +104,43 @@ int ioctl(
 		real_ioctl = reinterpret_cast<decltype(real_ioctl)>(dlsym(RTLD_NEXT, "ioctl"));
 
 	ret = real_ioctl(fd, request, argp);
-	
+
+	switch(cmd)
+	{
+		case NV_FREE:
+		{
+			nv_parameter_os00* parameter = reinterpret_cast<decltype(parameter)>(argp);
+			std::cout << std::endl;
+			std::cout << "+ Free NVOS" << std::endl;
+			// Error status 49: Object Not valid
+			std::cout << "Root Handle: 0x" << std::hex << parameter->rootHandle << std::endl;
+			std::cout << "Parent Object Handle: 0x" << parameter->parentObjHandle << std::endl;
+			std::cout << "Old Object Handle: 0x" << parameter->oldObjHandle << std::endl;
+			std::cout << "Status: " << std::dec << parameter->status << std::endl;
+			std::cout << "- Free NVOS\n\n";
+		}
+		break;
+
+		case NV_ALLOC:
+			if(size == sizeof(nv_parameter_os21))
+			{
+				nv_parameter_os21* parameter = reinterpret_cast<decltype(parameter)>(argp);
+
+				std::cout << std::endl;
+				std::cout << "+ Parameter OS21 Info" << std::endl;
+            	std::cout << "Root Handle: 0x" << std::hex <<  parameter->rootHandle << std::endl;
+            	std::cout << "Parent Object Handle: 0x" << parameter->parentObjHandle << std::endl;
+            	std::cout << "New Object Handle: 0x" << parameter->newObjHandle << std::endl;
+            	std::cout << "Class Handle: 0x" << parameter->classHandle << std::endl;
+            	std::cout << "Alloc params: " << std::dec << parameter->pAllocParams << std::endl;
+            	std::cout << "Parameter Size: " << parameter->paramSize << std::endl;
+            	std::cout << "Status: " << parameter->status << std::endl;
+            	std::cout << "- Parameter OS21 Info\n\n";
+			}
+			break;
+		default:
+			break;
+	}
 
 	return ret;
 }
