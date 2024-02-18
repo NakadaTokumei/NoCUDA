@@ -9,14 +9,7 @@
 
 #include <compiler_builtin.h>
 #include <nv_def.h>
-
-// NV Default IOCTL DIR and Type
-#define NV_DEFAULT_DIR (_IOC_READ | _IOC_WRITE)
-#define NV_DEFAULT_MAGIC static_cast<NVu32>('F')
-
-// NV Command 
-#define NV_CARD_INFO	200
-#define NV_SYS_PARAMS	214
+#include <nv_parameters.h>
 
 struct nv_ioctl_sys_params
 {
@@ -61,6 +54,7 @@ class SelfNV
 	void GetMemBlock(void);
 	bool SetNVParams(void);
 	bool GetCardInfo(void);
+	bool ControlTest(void);
 	void CloseAllFD(void);
 public:
 	SelfNV() = default;

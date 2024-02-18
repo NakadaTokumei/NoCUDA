@@ -96,6 +96,28 @@ SelfNV::GetCardInfo(void)
     return status;
 }
 
+bool
+SelfNV::ControlTest(void)
+{
+    bool status = false;
+    auto nvos = NVOS<nv_parameter_os21>(fdVec[0]);
+
+    if(!nvos.Alloc())
+    {
+        std::cout << "Failed to allocate handle: " << errno << std::endl; 
+        status = false;
+    }
+    else
+    {
+        if(!nvos.Free())
+        {
+            std::cout << "Failed to free handle: " << errno << std::endl; 
+            status = false;
+        }
+    }
+
+    return status;
+}
 
 void
 SelfNV::CloseAllFD(void)
@@ -121,4 +143,11 @@ SelfNV::Start(void)
         std::cerr << "Failed to get card info... : " << errno << std::endl;
         return;
     }
+
+    if(!ControlTest())
+    {
+        return;
+    }
+
+    CloseAllFD();
 }
